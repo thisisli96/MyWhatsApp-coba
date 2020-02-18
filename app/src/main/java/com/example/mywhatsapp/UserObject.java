@@ -15,4 +15,6 @@ public class UserObject {
     public String getName() { return name; }
 
     public String getPhone() {return phone; }
+
+    public void setName(String name) { this.name = name; }
 }

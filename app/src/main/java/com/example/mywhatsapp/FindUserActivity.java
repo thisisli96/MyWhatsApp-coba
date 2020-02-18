@@ -117,9 +117,15 @@ public class FindUserActivity extends AppCompatActivity {
 
                         UserObject mUser = new UserObject(name, phone);
 
-                        if (!name.equals("")){
+                        if (name.equals(phone)){
 
-                            Log.i("mana tidak ada kodong" , phone);
+                            for (UserObject mContacIterator : contactList) {
+
+                                if(mContacIterator.getPhone().equals(mUser.getPhone())){
+                                    mUser.setName(mContacIterator.getName());
+                                }
+
+                            }
                         }
                         userList.add(mUser);
                         mUserListAdapter.notifyDataSetChanged();
