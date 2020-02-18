@@ -3,10 +3,8 @@ package com.example.mywhatsapp;
 
 import android.annotation.SuppressLint;
 import android.database.Cursor;
-import android.icu.util.IslamicCalendar;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.telecom.TelecomManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.LinearLayout;
@@ -16,6 +14,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.mywhatsapp.Utils.CountryToPhonePrefix;
+import com.example.mywhatsapp.User.UserListAdapter;
+import com.example.mywhatsapp.User.UserObject;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;

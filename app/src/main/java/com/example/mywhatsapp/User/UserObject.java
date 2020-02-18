@@ -1,4 +1,4 @@
-package com.example.mywhatsapp;
+package com.example.mywhatsapp.User;
 
 
 public class UserObject {
