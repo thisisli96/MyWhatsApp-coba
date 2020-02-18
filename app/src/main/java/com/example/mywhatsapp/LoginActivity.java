@@ -104,10 +104,30 @@ public class LoginActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()){ //3.Database Structure (checking if contact is also a user)
                     // 2 saving to database
+                    final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                    if (user != null){}
+                        final DatabaseReference mUserDB = FirebaseDatabase.getInstance().getReference().child("user").child(user.getUid());
+                    mUserDB.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
+                            if(!dataSnapshot.exists()){
+                                Map<String, Object> userMap = new HashMap<>();
+                                userMap.put("phone", user.getPhoneNumber());
+                                userMap.put("name", user.getPhoneNumber());
+                                mUserDB.updateChildren(userMap);
+                            }
+                            userIsLoggedIn();
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
                 } // end task
 
-                userIsLoggedIn();
+               // userIsLoggedIn();
 
             }
         });

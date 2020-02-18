@@ -1,4 +1,6 @@
 package com.example.mywhatsapp;
+
+
 import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.icu.util.IslamicCalendar;
@@ -45,7 +47,7 @@ public class FindUserActivity extends AppCompatActivity {
     private void getContactList(){ //3.getting contatcs informasion
         // untuk memdapatkan contact kita menggunakan cursor dari contact hp
 
-
+        String ISOPrefix = getCountryISO();
 
         Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
         // sekarang buat perulangan untuk menampilkan semua data kontak di cursor
@@ -53,16 +55,86 @@ public class FindUserActivity extends AppCompatActivity {
             String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
             String phone = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
 
+            phone = phone.replace(" ","");
+            phone = phone.replace("-","");
+            phone = phone.replace("(","");
+            phone = phone.replace(")","");
+            //phone = phone.replace("","");
+
+            if (!String.valueOf(phone.charAt(0)).equals("+"))
+                phone = ISOPrefix + phone;
+
             UserObject mContact = new UserObject(name, phone);
+            contactList.add(mContact);
+            //Log.i("ini contact", contactList.toString());
+            //Log.i("ini ISO data ", phone);
+            //userList.add(mContact);
 
-            userList.add(mContact);
-
-            mUserListAdapter.notifyDataSetChanged();
-
+           // mUserListAdapter.notifyDataSetChanged();
+            getUserDetails(mContact);
 
         }
 
 
+    }
+
+    private  String getCountryISO() { //
+        String iso = null;
+        TelephonyManager telephonyManager= (TelephonyManager)  getApplicationContext().getSystemService(getApplicationContext().TELEPHONY_SERVICE);
+
+        if (telephonyManager.getNetworkCountryIso() != null)
+            if (!telephonyManager.getNetworkCountryIso().toString().equals(""))
+                iso = telephonyManager.getNetworkCountryIso().toString();
+
+        return  CountryToPhonePrefix.getPhone(iso);
+    }
+    private void getUserDetails(UserObject mContact) {
+        DatabaseReference mUserDB = FirebaseDatabase.getInstance().getReference().child("user");
+        Query query = mUserDB.orderByChild("phone").equalTo(mContact.getPhone());
+        Log.i("ini kontak pertama", query.toString());
+
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//
+//                                    String coba;
+//                    coba = dataSnapshot.child("phone").getValue().toString();
+//                    Log.i("ini kontak pertama", coba);
+
+                if (dataSnapshot.exists()){
+
+                    String phone = "",
+                            name = "";
+                    for (DataSnapshot childSnapshot : dataSnapshot.getChildren()){ // untuk menampilkan semua data
+                        if(childSnapshot.child("phone").getValue()!=null)
+                            Log.i("ada data ", childSnapshot.child("phone").getValue().toString());
+                        phone = childSnapshot.child("phone").getValue().toString();
+
+                        if(childSnapshot.child("name").getValue()!=null)
+                            name = childSnapshot.child("name").getValue().toString();
+
+
+                        UserObject mUser = new UserObject(name, phone);
+
+                        if (!name.equals("")){
+
+                            Log.i("mana tidak ada kodong" , phone);
+                        }
+                        userList.add(mUser);
+                        mUserListAdapter.notifyDataSetChanged();
+                        return;
+                    }
+                } else {
+                    Log.i("tidak ada databos", "salahko");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @SuppressLint("WrongConstant")
