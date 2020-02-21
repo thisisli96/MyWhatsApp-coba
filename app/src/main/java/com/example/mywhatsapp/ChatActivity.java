@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -18,12 +19,16 @@ import com.example.mywhatsapp.Chat.ChatObject;
 import com.example.mywhatsapp.Chat.MediaAdapter;
 import com.example.mywhatsapp.Chat.MessageAdapter;
 import com.example.mywhatsapp.Chat.MessageObject;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -119,6 +124,8 @@ public class ChatActivity extends AppCompatActivity {
 
     } // akhir get chat message
 
+    ArrayList<String> mediaIdList = new ArrayList<>();
+    int totalMediaUploaded = 0;
     private void sendMessage(){ // membuat function untuk chating
 
 
@@ -126,15 +133,66 @@ public class ChatActivity extends AppCompatActivity {
 
         if (!mMassage.getText().toString().isEmpty()){ // 6.creating a new message
             Log.i("ini kenapa error", mMassage.getText().toString());
-            DatabaseReference newMessageDb = mChatDb.push();
+            String messageId = mChatDb.push().getKey();
+            final DatabaseReference newMessageDb = mChatDb.push();
 
-            Map newMessageMap = new HashMap<>();
-            newMessageMap.put("text",mMassage.getText().toString());
+            final Map newMessageMap = new HashMap<>();
+
             newMessageMap.put("creator", FirebaseAuth.getInstance().getUid());
+            if (!mMassage.getText().toString().isEmpty())
+                newMessageMap.put("text",mMassage.getText().toString());
 
-            newMessageDb.updateChildren(newMessageMap);
+
+
+            if (!mediaUriList.isEmpty()) {
+                for (final String mediaUri : mediaUriList){
+
+
+                    final String mediaId = newMessageDb.child("media").push().getKey();
+                    mediaIdList.add(mediaId);
+                    final StorageReference filePath = FirebaseStorage.getInstance().getReference().child("chat").child(chatID).child(messageId).child(mediaId);
+
+                    // SEND MEDIA 5. getting medias URL
+
+                    final UploadTask uploadTask = filePath.putFile(Uri.parse(mediaUri));
+                    uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                             filePath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                 @Override
+                                 public void onSuccess(Uri uri) {
+
+                                     newMessageMap.put("/media/" + mediaIdList.get(totalMediaUploaded) + "/", uri.toString() );
+
+                                     totalMediaUploaded++;
+                                      if (totalMediaUploaded == mediaUriList.size()){
+                                                //uploadTask
+                                          updateDatabaseWithMessage(newMessageDb, newMessageMap);
+                                      }
+
+                                 }
+                             });
+                        }
+                    });
+                }
+            } else {
+                if (!mMassage.getText().toString().isEmpty())
+                    updateDatabaseWithMessage(newMessageDb, newMessageMap);
+//                newMessageDb.updateChildren(newMessageMap);
+            }
         }
+
+    }
+
+    public void updateDatabaseWithMessage(DatabaseReference newMessageDb, Map newMessageMap){
+
+        newMessageDb.updateChildren(newMessageMap);
         mMassage.setText(null);
+        mediaUriList.clear();
+        mediaIdList.clear();
+        mMediaAdapter.notifyDataSetChanged();
+
+
     }
 
     private void initializeMessage(){
