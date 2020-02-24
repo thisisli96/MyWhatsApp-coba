@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 import com.example.mywhatsapp.Chat.ChatListAdapter;
 import com.example.mywhatsapp.Chat.ChatObject;
 import com.example.mywhatsapp.User.UserObject;
+import com.facebook.drawee.backends.pipeline.Fresco;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -40,6 +41,8 @@ public class MainPageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_page);
+
+        Fresco.initialize(this);
 
         chatList= new ArrayList<>();
 
